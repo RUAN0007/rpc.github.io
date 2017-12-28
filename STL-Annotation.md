@@ -5,23 +5,24 @@ layout: default
 ---
 
 # Chapter 1: STL Introduction
-## History of STL Evolution and Open Source Community
-## A set of Compiler Macro Configuration for portability. 
-## Techinque of **Generalization**, **Specilization** and **Refinement**
-## Relationship between Components
-* Allocator
-* Container and Iterators
-* Algorithm
-* Functor
-* Adaptors
+- History of STL Evolution and Open Source Community
+- A set of Compiler Macro Configuration for portability. 
+- Techinque of **Generalization**, **Specilization** and **Refinement**
+- Relationship between Components
+  - Allocator
+  - Container and Iterators
+  - Algorithm
+  - Functor
+  - Adaptors
 
 # Chapter 2: Allocator
-## Global _construct()_ and _destroy()_ function for object construction and desctruction on the allocated memory
-### Use refinement and specification technique to select proper construction implemenation based on whether having trivial destructor or not. 
+## Construction and Destruction
+- Global _construct()_ and _destroy()_ function for object construction and desctruction on the allocated memory
+- Use refinement and specification technique to select proper construction implemenation based on whether having trivial destructor or not. 
 
 ## Two-level Memory Allocator
-### Use _malloc()_ and _free()__ for large memory allocation
-### Use pre-allocated **free lists** for small memory allocation 
+- Use _malloc()_ and _free()__ for large memory allocation
+- Use pre-allocated **free lists** for small memory allocation 
 If the free list of desirable size is exhausted, refill it using larger memory chunk or request using _malloc()_. 
 
 ## Global functions to copy or fill objects on allocated but uninitiatized memory
@@ -136,7 +137,11 @@ def push_heap_aux(Iterator first, Distance holeIdx,
 
 def pop_heap(first, last):
   Element e = *(last - 1);
-  *(last - 1) = *first;
+  pop_heap_aux(first, last-1, last-1, e);
+
+
+def pop_heap_aux(first, last, pos, e);
+  *pos = *first;
   adjust_heap(first, 0, (last - first - 1), e);
 ```
 
@@ -191,8 +196,8 @@ def make_heap(first, last):
 ## SList
 * A singly-linked list
 * Forward Iterator
-* Efficient _push_front()_, _pop_front()_, _erase_after() and _insert_after_() operations.
-* Inefficient _push()_, _pop()_ operations far from the head
+* Efficient *push_front()*, *pop_front()*, *erase_after()* and *insert_after()* operations.
+* Inefficient *push()*, *pop()* operations far from the head
 
 
 # Chapter 5: Associative Containers
@@ -252,7 +257,7 @@ iterator search(Key k, Node header):
     return j;
 ```
 
-## RB-Tree Powered Contaioners
+## RB-Tree Powered Containers
 - _map_/_set_
   - _insertion()_
     - Use RB Tree *insert_unique()* for insertion
@@ -292,5 +297,542 @@ Maintain a vector of linked list of nodes
   - use *insert_unique()*
 - *hash_multimap*/*hash_multiset*
   - use *insert_equal()*
+
+
+# Chapter 6: Algorithms
+## Numeric
+- *accumulate()*
+- *adjacent_difference()*
+- *inner_product()*
+- *partial_sum()*
+- *power()*
+```
+def power(T x, uint n, MonoidOp op):
+  if n == 0: return identitiy(op);
+  while (n & 1) == 0:
+    n >>= 1;
+    x = op(x, x);
+
+  T result = x;
+  n >>= 1;
+  while (n != 0):
+    x = op(x, x);
+    if (n & 1 == 1):
+      result = op(result, x);
+    n >>= 1;
+  return result;
+```
+
+## Algobase
+- *fill()*
+- *fill_n()*
+- *equal()*
+- *iter_swap()*
+- *max()*
+- *min()*
+- *mismatch()*
+- *swap()*
+- *compare()*
+- *lexicographical_compare()*
+
+## Copy
+- Any Input Iterator (Generalization)
+  - Refinement for forward iterator
+    - Sequetial copy by advancing source and destination iterators
+  - Refinement for random access iterator
+    - Sequential copy from i = 0 to number of elements   
+  - T\* (partial specification)
+  - const T\* (partial specification)
+    - has trivial operator=
+      - use *memmove()*
+    - No trivial opererator=
+      - Treat as random access iterator
+- const char\* (specification)
+  - use *memmove()*
+- const wchar_t\* (specification)
+  - use *memmove()*
+- *copy_backward()* (Similarly handled as above)
+
+## Set
+- *set_union()*
+- *set_intersection()*
+- *set_difference()*
+- *set_symmetric_difference()*
+
+## Others
+- *adjacent_find()*
+  - Return the iterator that points to the first element of the first adjacent equal pair
+- *count()*
+- *count()_if()*
+- *find()*
+- *find_if()*
+- *search_n()*
+  - Find the first continuous occurrence of an element inside another interval
+- *search()*
+  - Find the first occurrence of an subinterval inside another interval
+- *find_end()*
+  - Find the last occurrence of an subinterval inside another interval
+  - Refinement on Forward Iterator
+    - Use *search()* to continuously search for the interval until the end
+  - Refinement on Bidirectional Iterator
+    - Search backward for the occurence of subinterval
+- *find_first_of()*
+  - Find the first occurrence of any element in subinterval inside another interval
+- *generate()*
+- *generate_n()*
+- *includes()*
+  - Return whether the parent interval contains all the elements in a subinterval while the elements in subinterval is preserved. 
+- *max_element()*
+- *min_element()*
+- *merge()*
+- *partition()*
+  - Partition the interval based on a predicate
+  - Return the iterator that points to the first element non-qualified element
+  - Original order is not preserved (Non-stable)
+- *remove()*
+- *remove_copy()*
+- *remove_copy_if()*
+- *replace()*
+- *replace_copy()*
+- *replace_if()*
+- *replace_copy_if()*
+- *reverse()* (Bidirectional Iterator Only)
+- *reverse_copy()*
+- *rotate()*
+
+```
+// Refinement for Forward Iterator
+def rotate(ForwardIterator f, m, l):
+  Iterator i = m;
+  while(1):
+    iter_swap(f, i);
+    ++f;
+    ++i;
+    if f == m:
+      if i == l return;
+      middle = i;
+    else if i == l:
+      i = middle;
+
+// Refinement for Bidirectional Iterator
+def rotate(BidirectionalIterator f, m, l):
+  reverse(f, m);
+  reverse(m, l);
+  reverse(f, l);
+
+// Refine for Random Access Iterator
+def rotate(RandomAccessIterator f, m, l):
+  g = gcd(m - f, l - m);
+  for i from 0 to g-1:
+    o = i;
+    // cyclic rotate
+    do:
+      n = (o - (m - f)) mod (l - f);
+      move element from o to n;
+      o = (o + (m - f)) mod (l - f);
+    while (i != o)
+```
+
+- *rotate_copy()*
+- *swap_ranges()*
+- *transform()*
+- *unique()*
+- *unique_copy()*
+
+## Sorted Interval Only 
+- *lower_bound()*
+  - Return the iterator that points to the first element no smaller than k
+- *upper_bound()*
+  - Return the iterator that points to the first element bigger than k
+- *equal_range()*
+  - Return an pair of *lower_bound()* and *upper_bound()*
+- *binary_search()*
+
+```
+def lower_bound(Iterator f/, e, k):
+  len = e - f;
+  while len > 0:
+    m = f + len >> 1;
+    if *middle < k:
+      f = m + 1;
+      len -= half + 1;
+    else:
+      len = half;
+  return f;
+
+def upper_bound(Iterator f, e, k):
+  len = e - f;
+  while len > 0:
+    m = f + len >> 1;
+    if *middle <= k:
+      f = m + 1;
+      len -= half + 1;
+    else:
+      len = half;
+  return f;
+
+def equal_range(Iterator f, e, k):
+  len = e - f;
+  while len > 0:
+    m = f + len >> 1;
+    if *middle < k:
+      f = m + 1;
+      len -= half + 1;
+    else if k < *middle:
+      len = half;
+    else 
+      lower = lower_bound(f, m);
+      upper = upper_bound(m + 1, e)
+      return (lower, upper);
+  return (first, first);
+```
+
+## Permutation and Shuffle
+### Permutation Order (From sorted to reverse sorted)
+1. (1, 2, 3)
+1. (1, 3 ,2)
+1. (2, 1, 3)
+1. (2, 3, 1)
+1. (3, 1 ,2)
+1. (3, 2, 1)
+
+- *next_permulation()*/*prev_permulation()*
+  - Bidirectial Iterator
+  - Given a permulation, return the next/previous one in the above order
+  - Return false if it is cyclic to start/end. True, otherwise
+- *random_shuffle()*
+  - Random Access Iterator
+
+```
+def next_permutation(BidirectionalIterator first, last):
+  Return false if 0 or 1 element. 
+  i = last;
+  while 1:
+    ii = i;
+    i = ii - 1;
+    if *i < *ii:
+      // Find from the end the first adjacent pair of the first element smaller than the second element 
+      j = last;
+      while !(*i < *--j);
+      // Until find j from the end such that *i >= *j
+      iter_swap(i, j);
+      reverse(ii, last);
+      return true;
+
+    if first == last:
+      reverse(first, last);
+      return false;
+
+
+def prev_permutation(BidirectionalIterator first, last):
+  Return false if 0 or 1 element. 
+  i = last;
+  while 1:
+    ii = i;
+    i = ii - 1;
+    if *ii < *i:
+      j = last;
+      while(!(*--j < *i));
+      // Until find j from the end such that *i >= *j
+      iter_swap(i, j);
+      reverse(ii, last);
+      return true;
+
+    if first == last:
+      reverse(first, last);
+      return false;
+```
+
+## Sort
+### Partial Sort
+```
+// Sort the first m - f elements between [f, m)
+def partial_sort(RandomAccessIterator f, m, l):
+  make_heap(f, m);
+  for i = from m to l - 1:
+    if (*i < *f)
+      pop_heap_aux(f, m, i, *i);
+  sort_heap(first, middle);
+```
+
+### Insertion Sort
+Good Performance for nearly-sorted interval or small interval
+```
+def insertion_sort(RandomAccessIterator f, l):
+  if f == l return
+  for i from f+1 to l-1:
+    linear_insert(l, i, *i);
+
+def linear_insert(RandonAccessIterator f, l, Element e):
+  if e < *f
+    copy_backward(f, l, f + 1);
+    *first = e
+  unguarded_linear_insert(f, l, e);
+
+// unguarded means eventually, there must exist an element smaller than e.
+//   So no need to worry out of bound. 
+def unguarded_linear_insert(RandonAccessIterator f, l, Element e):
+  --l;
+  while e < *l:
+    *(l+1) = *l;
+    --l;
+  *(++l) = e;
+
+```
+
+### Merge Sort
+```
+def merge_sort(BidirectionalIterator f, l):
+  len = f - l;
+  m = f + len / 2;
+  merge_sort(f, m);
+  merge_sort(m+1, l);
+  merge_adaptive(f, m, l);
+
+// Sorted subinterval [f, m) and [m+1, l) to be merged on [f, l)
+//   e.g, [1, 3, 5] and [2, 4]
+def merge_adaptive(BidirectionalIterator f, m, l):
+  len = l - f;
+  l1 = f - m
+  l2 = l - m;
+  buffer = request a buffer of len
+  if (l1 < l2 && l1 < buf_size):
+    copy [f, m) to buf
+    merge buf and [l, m-1) to f
+  else if (l2 < buf_size):
+    copy [m+1, l) to buf
+    merge backward buf and [f, m-1) to f
+  else:
+    // buf_size < l1 , l2
+    // assume l1 < l2
+    Partition [m+1, l) to equally two lists l21, l22
+    Partition [l, m) to l11, l12 such that all l11 elements are smaller or equal to all elements of l22
+    [l11, l12, l22, l21]
+    Rotate [l12, l22] to give [l11, l22, l12, l21] with buffer
+    merge_adaptive(l11, l22) with buffer;
+    merge_adaptive(l12, l21) with buffer;
+```
+
+### Intro Sort
+- Implementation of std::sort
+  - For small or near-sorted interval, switch to insertion_sort
+  - Recursively partition the interval as in quick sort until the interval length is smaller than threshold. 
+  - For too deep recursion level, use heap sort
+
+```
+def sort(RandomAccessIterator f, l):
+  intro_sort(f, l, MAX_LEVEL);
+  final_insertion_sort(f, l);
+
+def intro_sort(f, l, level):
+  len = l - f;
+  while l - f > THRESHOLD:
+    if level == 0: 
+      partial_sort(f, l, l);  // heap sort actually
+    m = f + len / 2;
+    med = median(*f, *m , *l);
+    cut = partition(f, l, med);
+    intro_sort(m+1, l, level-1);
+    l = cut;
+
+def final_insertion_sort(f, l):
+  len = l - f;
+  if len > THRESHOLD:
+    insertion_sort(f, f + THRESHOLD);
+    for i from f + TREHSHOLD to l - 1:
+    // Unguarded because there exsists an element in the first THRESHOLD elements smaller than *i due to the previous partitioning
+      unguarded_linear_insert(f, i, *i);
+  else:
+    insertion_sort(f, l);
+```
+
+### nth_element
+- Function
+  - nth iterator will contain the element which shall reside in nth if sorted
+  - All elements before nth is smaller or equal to \*nth
+  - All elements after nth is greater or equal to \*nth
+- Algorithm
+  - Recursive partition the interval which contains nth
+  - Insertion sort the interval when the interval length is smaller than a threshold
+```
+def nth_element(RandomAccessIterator f, l, nth):
+  while l - f > 3:
+    m = f + (m - f) / 2;
+    med = median(*f, *m, *l);
+    cut = partition(f, l, med);
+    if cut <= nth:
+      f = cut;
+    else:
+      l = cut;
+  insertion_sort(f, l);
+```
+
+# Chapter 7: Functor
+## Inherit the following template to make self-defined functor adaptable
+- ```unary_function<typename Arg, typename Result>```
+- ```binary_function<typename Arg1, typename Arg2, typename Result>```
+
+## Functor Classification
+- Arithmetic
+  - *plus\<T\>*
+  - *minus\<T\>*
+  - *multiplies\<T\>*
+  - *divides\<T\>*
+  - *modulus\<T\>*
+  - *negate\<T\>*
+  - *identity_element\<T\>*
+- Relational
+  - *equal_to\<T\>*
+  - *not_equal_to\<T\>*
+  - *greater\<T\>*
+  - *greater_equal\<T\>*
+  - *less\<T\>*
+  - *less_equal\<T\>*
+- Logical
+  - *logical_and\<T\>*
+  - *logical_or\<T\>*
+  - *logical_not\<T\>*
+- Others
+  - *identity\<T\>*
+  - *select1st\<Pair\>*
+  - *select2st\<Pair\>*
+  - *project1st\<Arg1, Arg2\>*
+  - *project2nd\<Arg1, Arg2\>*
+
+## Chapter 8: Adaptor
+### Container Adaptor
+* stack
+* queue
+
+### Iterator Adaptor
+#### Inserter Iterator
+```
+class BackInserter<Container> {
+  typedef output_iterator_tag iterator_category;
+  Container* c;
+  BackInserter<Container>& operator=(Element e) {
+    c->push_back(e);
+    return *this;
+  }
+
+  BackInserter<Container>& operator*() {
+    // Unlike normal iterator that returns the reference to the pointed element,
+    // it returns itself the reference. 
+    return *this; 
+  }
+
+  BackInserter<Container>& operator++() {
+    // This is to be compatible for incremental assignment operation, such as
+    //   *(++back_inserter) = *(++input_iterator);
+    return *this;
+  }
+
+  BackInserter<Container>& operator++(int) {
+    // Same rationale as above
+    return *this;
+  }
+};
+
+class FrontInserter<Container> {
+  // Similarly defined as above
+  // Use push_front during assignment operation
+}
+
+class Inserter<Container, Iterator> {
+  // Similarly defined as above
+  // Use insert during assignment operation
+}
+```
+- Back Inserter
+
+#### Reverse Iterator
+```
+class ReverseIterator<Iterator> {
+  typedef Iterator::iterator_category iterator_category;
+  Iterator base;
+  Iterator::reference operator*() {
+    // There exists one offset between normal iterator. 
+    return *(base-1);
+  }
+}
+```
+#### Stream Iterator
+- istream_iterator<T>
+- ostream_iterator<T>
+
+```
+class istream_iterator<T> {
+  typedef input_iterator_tag iterator_category;
+  T value
+  istream_iterator<T>(istream s) {
+    // Read in the first value during construction
+    s >> value;
+  }
+
+  T& operator*() {
+    return value;
+  }
+
+  istream_iterator<T>& operator++() {
+    s >> value;
+    return this;
+  }
+  istream_iterator<T>& operator++(int) {
+    tmp = this;
+    // Read in the next value
+    s >> value;
+    return tmp;
+  }
+
+}
+
+class ostream_iterator<T> {
+  typedef output_iterator_tag iterator_category;
+  // Similarly handled with all output iterators
+  ostream_iterator<T>& operator*() {
+    return *this;
+  }
+
+  ostream_iterator<T>& operator++() {
+    return *this;
+  }
+
+  ostream_iterator<T>& operator++(int) {
+    return *this;
+  }
+}
+```
+
+### Functor Adaptor
+- *not1()*
+  - ```unary_negate<class Predicate>```
+- *not2()*
+  - ```binary_negate<class Predicate>```
+- *bind1st()*
+  - ```binder1st<class Operation>```
+- *bind2nd()*
+  - ```binder2nd<class Operation>```
+- *compose1()*
+  - ```unary_compose<class Op1, class Op2>```
+- *compose2()*
+  - ```binary_compose<class Op1, class Op2, class Op3)```
+- *ptr_fun()*
+  - ```pointer_to_unary_function<Arg, Result>```
+  - ```pointer_to_unary_function<Arg1, Arg2, Result>```
+- *mem_fun()*
+  - ```mem_fun_t<T*, Result>```
+  - ```const_mem_fun_t<T*, Result>```
+  - ```mem_fun1_t<T*, Arg, Result>```
+  - ```const_mem_fun1_t<T*, Arg, Result>```
+- *mem_fun_ref()*
+  - ```mem_fun_ref_t<T*, Result>```
+  - ```const_mem_fun_ref_f<T*, Result>```
+  - ```mem_fun1_ref_t<T*, Arg, Result>```
+  - ```const_mem_fun1_ref_t<T*, Arg, Result>```
+
+
+
+
+
 
 [back](./)
